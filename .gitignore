@@ -1,0 +1,9 @@
+# Игнорируем JSON-импорты (временные файлы)
+tracker/may2026_import.json
+tracker/june2026_import.json
+
+# macOS
+.DS_Store
+
+# Системное
+.gemini/

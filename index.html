@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YO:Garden — Трекер практик</title>
+    <meta name="description" content="YO:Garden — личный трекер йога-практик. Веди учёт тренировок, следи за прогрессом.">
+    <!-- Favicon: инлайн SVG, не нужны внешние файлы -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230d1220'/%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%23a78bfa'/%3E%3Cstop offset='100%25' stop-color='%2334d399'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ctext x='16' y='23' font-family='system-ui,sans-serif' font-size='20' font-weight='900' fill='url(%23g)' text-anchor='middle'%3EY%3C/text%3E%3C/svg%3E">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg:            #080d18;
+            --bg-card:       rgba(255,255,255,0.04);
+            --bg-card-hover: rgba(255,255,255,0.07);
+            --accent:        #8b5cf6;
+            --accent-dim:    rgba(139,92,246,0.15);
+            --accent-border: rgba(139,92,246,0.4);
+            --accent-glow:   0 0 28px rgba(139,92,246,0.35);
+            --green:         #10b981;
+            --green-light:   #34d399;
+            --green-dim:     rgba(16,185,129,0.11);
+            --green-border:  rgba(16,185,129,0.38);
+            --text:          #f0f4ff;
+            --text-2:        #94a3b8;
+            --text-3:        #3d4f6b;
+            --border:        rgba(255,255,255,0.07);
+            --border-2:      rgba(255,255,255,0.13);
+            --radius-sm:  8px; --radius-md: 14px; --radius-lg: 20px; --radius-xl: 28px;
+        }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background: var(--bg); color: var(--text);
+            min-height: 100vh; padding: 28px 16px 56px;
+            background-image:
+                radial-gradient(ellipse 60% 50% at 10% 5%,  rgba(139,92,246,0.1)  0%, transparent 55%),
+                radial-gradient(ellipse 50% 40% at 90% 95%, rgba(16,185,129,0.07) 0%, transparent 55%);
+            animation: fadeIn .5s ease;
+        }
+
+        @keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+
+        .container { max-width: 860px; margin: 0 auto; }
+
+        /* HEADER */
+        .header { text-align: center; margin-bottom: 36px; }
+        .header-badge {
+            display: inline-flex; align-items: center; gap: 6px;
+            font-size: 11px; font-weight: 600; letter-spacing: 2.5px; text-transform: uppercase;
+            color: #a78bfa; background: var(--accent-dim); border: 1px solid var(--accent-border);
+            padding: 5px 16px; border-radius: 100px; margin-bottom: 14px;
+        }
+        .header h1 {
+            font-size: clamp(26px,5vw,40px); font-weight: 800; letter-spacing: -.5px; line-height: 1.1;
+            background: linear-gradient(130deg,#e2e8f0 20%,#a78bfa 60%,#34d399 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+        }
+        .header p { margin-top: 8px; color: var(--text-2); font-size: 14px; }
+
+        /* STATS */
+        .stats-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; margin-bottom: 20px; }
+        .stat-card {
+            background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg);
+            padding: 16px 14px; backdrop-filter: blur(16px);
+            transition: transform .25s, border-color .25s, background .25s;
+        }
+        .stat-card:hover { background: var(--bg-card-hover); border-color: var(--border-2); transform: translateY(-2px); }
+        .stat-label { font-size: 10px; font-weight: 600; letter-spacing: 1.2px; text-transform: uppercase; color: var(--text-3); margin-bottom: 9px; }
+        .stat-value { font-size: clamp(17px,2.5vw,22px); font-weight: 700; color: var(--text); line-height: 1; }
+        .stat-value.purple { color: #a78bfa; }
+        .stat-value.green  { color: var(--green-light); }
+        .stat-sub { font-size: 11px; color: var(--text-3); margin-top: 5px; }
+
+        /* CALENDAR CARD */
+        .calendar-card {
+            background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-xl);
+            padding: 24px; backdrop-filter: blur(16px); margin-bottom: 16px;
+        }
+        .month-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 22px; }
+        .month-title { font-size: 18px; font-weight: 700; letter-spacing: -.2px; }
+        .nav-group { display: flex; gap: 6px; }
+        .nav-btn {
+            width: 34px; height: 34px; border-radius: var(--radius-sm);
+            border: 1px solid var(--border); background: transparent; color: var(--text-2);
+            cursor: pointer; display: grid; place-items: center; font-size: 18px; line-height: 1;
+            transition: all .2s; padding-bottom: 1px; font-family: inherit;
+        }
+        .nav-btn:hover { border-color: var(--accent-border); color: #a78bfa; background: var(--accent-dim); }
+        .today-btn { padding: 0 12px; font-size: 12px; font-weight: 500; width: auto; }
+
+        .weekdays { display: grid; grid-template-columns: repeat(7,1fr); gap: 5px; margin-bottom: 6px; }
+        .weekday { text-align: center; font-size: 10px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--text-3); padding: 4px 0; }
+
+        .calendar-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 5px; }
+
+        /* DAY CELLS — кликабельные, без inline-инпутов */
+        .day-cell {
+            border-radius: var(--radius-md); border: 1px solid var(--border);
+            background: rgba(255,255,255,0.02);
+            display: flex; flex-direction: column; align-items: flex-start;
+            padding: 8px 8px 7px; cursor: pointer; min-height: 64px;
+            transition: border-color .2s, background .2s, transform .15s;
+            position: relative; user-select: none;
+        }
+        .day-cell:not(.empty):hover { border-color: var(--border-2); background: var(--bg-card-hover); transform: translateY(-1px); }
+        .day-cell:not(.empty):active { transform: translateY(0); }
+
+        .day-cell.today      { background: var(--accent-dim); border-color: var(--accent-border); }
+        .day-cell.today .day-num { color: #a78bfa; }
+        .day-cell.has-workout { background: var(--green-dim); border-color: var(--green-border); }
+        .day-cell.has-workout .day-num { color: var(--green-light); }
+        .day-cell.today.has-workout { background: linear-gradient(135deg,var(--accent-dim),var(--green-dim)); border-color: var(--green-border); }
+        .day-cell.empty { border-color: transparent; background: transparent; cursor: default; }
+
+        .day-num { font-size: 12px; font-weight: 600; color: var(--text-2); line-height: 1; margin-bottom: 5px; }
+
+        /* Итоговое время дня в ячейке */
+        .day-total {
+            font-size: 11px; font-weight: 600; color: var(--text); line-height: 1.2;
+            width: 100%; text-align: center;
+        }
+
+        /* Бейдж с кол-вом сессий */
+        .day-badge {
+            position: absolute; top: 5px; right: 5px;
+            background: var(--green-border); color: var(--green-light);
+            font-size: 9px; font-weight: 700; padding: 1px 5px; border-radius: 100px; line-height: 1.4;
+        }
+
+        .day-cell.today .day-badge { background: var(--accent-border); color: #a78bfa; }
+
+        /* Иконка «+» при наведении */
+        .day-add-hint {
+            position: absolute; bottom: 5px; right: 6px;
+            font-size: 14px; color: var(--text-3); opacity: 0;
+            transition: opacity .2s; line-height: 1;
+        }
+        .day-cell:not(.empty):hover .day-add-hint { opacity: 1; }
+
+        /* Полоска активности снизу */
+        .day-bar {
+            position: absolute; bottom: 2px; left: 6px; right: 6px;
+            height: 2px; border-radius: 2px;
+        }
+        .has-workout .day-bar { background: linear-gradient(90deg,var(--green),var(--green-light)); }
+
+        /* CHART */
+        .chart-section { margin-top: 22px; padding-top: 20px; border-top: 1px solid var(--border); }
+        .section-label { font-size: 10px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-3); margin-bottom: 12px; }
+        .chart-bars { display: flex; align-items: flex-end; gap: 3px; height: 56px; }
+        .bar-col { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; height:100%; position:relative; cursor:default; }
+        .bar-col:hover .bar-tooltip { opacity:1; transform:translateX(-50%) translateY(0); }
+        .bar { width:100%; border-radius:3px 3px 0 0; min-height:2px; transition:height .5s cubic-bezier(.34,1.56,.64,1); }
+        .bar-tooltip {
+            position:absolute; bottom:calc(100% + 6px); left:50%;
+            transform:translateX(-50%) translateY(4px);
+            background:#1a2438; border:1px solid var(--border-2);
+            color:var(--text); font-size:10px; font-weight:500;
+            padding:3px 7px; border-radius:6px; white-space:nowrap;
+            pointer-events:none; opacity:0; transition:opacity .15s,transform .15s; z-index:10;
+        }
+
+        /* ACTIONS */
+        .actions { display:flex; gap:8px; flex-wrap:wrap; }
+        .btn {
+            display:inline-flex; align-items:center; gap:6px;
+            padding:9px 16px; border-radius:var(--radius-sm);
+            border:1px solid var(--border); background:var(--bg-card);
+            color:var(--text-2); font-family:'Inter',sans-serif; font-size:12px; font-weight:500;
+            cursor:pointer; transition:all .2s; white-space:nowrap;
+        }
+        .btn:hover { border-color:var(--border-2); color:var(--text); background:var(--bg-card-hover); }
+        .btn-icon { font-size:14px; line-height:1; }
+        .btn.primary { background:linear-gradient(135deg,#6d28d9,#4c1d95); border-color:rgba(109,40,217,.6); color:#fff; }
+        .btn.primary:hover { background:linear-gradient(135deg,#7c3aed,#5b21b6); box-shadow:var(--accent-glow); transform:translateY(-1px); }
+        .btn.danger:hover { border-color:rgba(220,38,38,.5); color:#f87171; background:rgba(220,38,38,.08); }
+
+        /* =============================================
+           DAY DETAIL MODAL
+        ============================================= */
+        .modal-overlay {
+            position:fixed; inset:0; background:rgba(4,8,20,.8); backdrop-filter:blur(6px);
+            display:flex; align-items:center; justify-content:center; z-index:200; padding:20px;
+            opacity:0; pointer-events:none; transition:opacity .2s;
+        }
+        .modal-overlay.open { opacity:1; pointer-events:all; }
+
+        .modal {
+            background:#111827; border:1px solid var(--border-2); border-radius:var(--radius-xl);
+            padding:28px; max-width:400px; width:100%;
+            transform:scale(.94) translateY(12px);
+            transition:transform .28s cubic-bezier(.34,1.56,.64,1);
+            max-height: 85vh; overflow-y: auto;
+        }
+        .modal-overlay.open .modal { transform:scale(1) translateY(0); }
+
+        /* Day modal specific */
+        .day-modal-header {
+            display: flex; align-items: flex-start; justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        .day-modal-date { font-size: 13px; color: var(--text-2); font-weight: 500; }
+        .day-modal-title { font-size: 20px; font-weight: 700; margin-top: 2px; }
+        .modal-close {
+            width: 30px; height: 30px; border-radius: 8px;
+            border: 1px solid var(--border); background: transparent;
+            color: var(--text-2); font-size: 16px; cursor: pointer;
+            display: grid; place-items: center; flex-shrink: 0;
+            transition: all .2s; font-family: inherit; margin-top: 2px;
+        }
+        .modal-close:hover { border-color: var(--border-2); color: var(--text); background: var(--bg-card-hover); }
+
+        /* Session list */
+        .session-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+
+        .session-row {
+            display: flex; align-items: center; gap: 8px;
+            background: rgba(255,255,255,0.04); border: 1px solid var(--border);
+            border-radius: var(--radius-sm); padding: 8px 10px;
+            transition: border-color .2s;
+        }
+        .session-row:focus-within { border-color: var(--accent-border); }
+
+        .session-num {
+            font-size: 11px; font-weight: 600; color: var(--text-3);
+            min-width: 20px; text-align: center;
+        }
+
+        .session-input {
+            flex: 1; background: transparent; border: none; outline: none;
+            color: var(--text); font-family: 'Inter', sans-serif;
+            font-size: 14px; font-weight: 500; cursor: text;
+        }
+        .session-input::placeholder { color: var(--text-3); }
+
+        .session-hint { font-size: 11px; color: var(--text-3); }
+
+        .session-delete {
+            width: 24px; height: 24px; border-radius: 6px;
+            border: 1px solid transparent; background: transparent;
+            color: var(--text-3); font-size: 14px; cursor: pointer;
+            display: grid; place-items: center;
+            transition: all .2s; flex-shrink: 0; line-height: 1;
+        }
+        .session-delete:hover { border-color: rgba(220,38,38,.4); color: #f87171; background: rgba(220,38,38,.08); }
+
+        .btn-add-session {
+            width: 100%; padding: 10px; border-radius: var(--radius-sm);
+            border: 1px dashed var(--border-2); background: transparent;
+            color: var(--text-2); font-family: 'Inter', sans-serif;
+            font-size: 13px; font-weight: 500; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; gap: 6px;
+            transition: all .2s; margin-bottom: 20px;
+        }
+        .btn-add-session:hover { border-color: var(--accent-border); color: #a78bfa; background: var(--accent-dim); }
+
+        .day-modal-footer {
+            display: flex; align-items: center; justify-content: space-between;
+            padding-top: 16px; border-top: 1px solid var(--border);
+        }
+        .day-total-label { font-size: 12px; color: var(--text-2); }
+        .day-total-value { font-size: 18px; font-weight: 700; color: var(--green-light); }
+
+        /* Confirm modal */
+        .confirm-modal .modal-icon { font-size: 32px; margin-bottom: 14px; }
+        .confirm-modal h3 { font-size: 19px; font-weight: 700; margin-bottom: 8px; }
+        .confirm-modal p { color: var(--text-2); font-size: 14px; line-height: 1.65; margin-bottom: 28px; }
+        .modal-actions { display: flex; gap: 10px; }
+        .modal-actions .btn { flex: 1; justify-content: center; padding: 11px; }
+
+        /* TOAST */
+        .toast {
+            position:fixed; bottom:28px; left:50%; transform:translateX(-50%) translateY(70px);
+            background:#1a2438; border:1px solid var(--border-2); color:var(--text);
+            font-size:13px; font-weight:500; padding:11px 22px; border-radius:100px;
+            z-index:300; white-space:nowrap; pointer-events:none;
+            transition:transform .35s cubic-bezier(.34,1.56,.64,1);
+        }
+        .toast.show { transform:translateX(-50%) translateY(0); }
+
+        .footer { text-align:center; margin-top:28px; color:var(--text-3); font-size:12px; }
+
+        /* RESPONSIVE */
+        @media (max-width:600px) {
+            body { padding:16px 12px 40px; }
+            .stats-grid { grid-template-columns:repeat(2,1fr); gap:8px; }
+            .calendar-card { padding:16px 12px; }
+            .day-cell { min-height:54px; border-radius:10px; padding:6px 6px 6px; }
+            .day-num { font-size:11px; }
+            .day-total { font-size:10px; }
+            .chart-bars { height:44px; }
+            .btn { padding:9px 12px; font-size:11px; }
+        }
+        @media (max-width:380px) {
+            .day-cell { min-height:46px; }
+        }
+    </style>
+</head>
+
+<body>
+<div class="container">
+    <header class="header">
+        <div class="header-badge">🧘 YO:Garden</div>
+        <h1>Трекер практик</h1>
+        <p>Записывай каждую тренировку — прогресс виден в цифрах</p>
+    </header>
+
+    <div class="stats-grid" role="region" aria-label="Статистика">
+        <div class="stat-card">
+            <div class="stat-label">Дней</div>
+            <div class="stat-value purple" id="stat-days">0</div>
+            <div class="stat-sub">в этом месяце</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">За месяц</div>
+            <div class="stat-value" id="stat-month">0 мин</div>
+            <div class="stat-sub" id="stat-month-h"></div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">В среднем</div>
+            <div class="stat-value green" id="stat-avg">—</div>
+            <div class="stat-sub">за тренировку</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">За всё время</div>
+            <div class="stat-value" id="stat-all">0 мин</div>
+            <div class="stat-sub" id="stat-all-h"></div>
+        </div>
+    </div>
+
+    <div class="calendar-card" role="main">
+        <div class="month-nav">
+            <h2 class="month-title" id="month-title" aria-live="polite">Июнь 2026</h2>
+            <div class="nav-group">
+                <button class="nav-btn today-btn" id="btn-today">Сегодня</button>
+                <button class="nav-btn" id="btn-prev" aria-label="Предыдущий месяц">&#8249;</button>
+                <button class="nav-btn" id="btn-next" aria-label="Следующий месяц">&#8250;</button>
+            </div>
+        </div>
+        <div class="weekdays">
+            <div class="weekday">Пн</div><div class="weekday">Вт</div><div class="weekday">Ср</div>
+            <div class="weekday">Чт</div><div class="weekday">Пт</div><div class="weekday">Сб</div>
+            <div class="weekday">Вс</div>
+        </div>
+        <div class="calendar-grid" id="calendar-grid" role="grid"></div>
+        <div class="chart-section">
+            <div class="section-label">Активность по дням</div>
+            <div class="chart-bars" id="chart-bars" aria-hidden="true"></div>
+        </div>
+    </div>
+
+    <div class="actions">
+        <button class="btn primary" id="btn-export"><span class="btn-icon">&#8595;</span> Экспорт JSON</button>
+        <button class="btn" id="btn-import"><span class="btn-icon">&#8593;</span> Импорт JSON</button>
+        <button class="btn danger" id="btn-clear"><span class="btn-icon">&#10005;</span> Очистить всё</button>
+        <input type="file" id="file-input" accept=".json" style="display:none" aria-hidden="true">
+    </div>
+
+    <footer class="footer">Данные хранятся локально в браузере · Без серверов · YO:Garden 🌿</footer>
+</div>
+
+<!-- Day detail modal -->
+<div class="modal-overlay" id="day-modal">
+    <div class="modal">
+        <div class="day-modal-header">
+            <div>
+                <div class="day-modal-date" id="day-modal-date"></div>
+                <div class="day-modal-title" id="day-modal-title"></div>
+            </div>
+            <button class="modal-close" id="day-modal-close" aria-label="Закрыть">&#10005;</button>
+        </div>
+        <div class="session-list" id="session-list"></div>
+        <button class="btn-add-session" id="btn-add-session">+ Добавить сессию</button>
+        <div class="day-modal-footer">
+            <div class="day-total-label">Итого за день</div>
+            <div class="day-total-value" id="day-modal-total">—</div>
+        </div>
+    </div>
+</div>
+
+<!-- Confirm clear modal -->
+<div class="modal-overlay" id="confirm-modal">
+    <div class="modal confirm-modal">
+        <div class="modal-icon">🗑️</div>
+        <h3>Удалить все данные?</h3>
+        <p>Все записи о тренировках будут безвозвратно удалены. Это действие нельзя отменить.</p>
+        <div class="modal-actions">
+            <button class="btn" id="modal-cancel">Отмена</button>
+            <button class="btn danger" id="modal-confirm">Удалить всё</button>
+        </div>
+    </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+/* ===================================================
+   STORAGE
+=================================================== */
+const STORAGE_KEY = 'yoga_garden_v2';
+
+function loadData() {
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; }
+    catch { return {}; }
+}
+
+function saveData(data) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+}
+
+/* ===================================================
+   DATA MODEL
+   Формат: { "YYYY-MM-DD": [min, min, ...] }
+   Каждый день — массив длительностей сессий в минутах.
+=================================================== */
+
+/**
+ * Миграция старого формата { "date": number } → { "date": [number] }
+ */
+function migrateData(data) {
+    let changed = false;
+    for (const k of Object.keys(data)) {
+        if (typeof data[k] === 'number') {
+            data[k] = data[k] > 0 ? [data[k]] : [];
+            changed = true;
+        }
+    }
+    if (changed) saveData(data);
+    return data;
+}
+
+/** Суммарное время дня в минутах */
+function dayTotal(sessions) {
+    if (!sessions || !sessions.length) return 0;
+    return sessions.reduce((s, v) => s + (v > 0 ? v : 0), 0);
+}
+
+/* ===================================================
+   HELPERS
+=================================================== */
+let viewYear, viewMonth;
+// Текущий открытый день в модалке
+let activeKey = null;
+
+function toKey(y, m, d) {
+    return y+'-'+String(m+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+}
+
+function daysInMonth(y, m) { return new Date(y, m+1, 0).getDate(); }
+
+/**
+ * Парсит ввод в минуты.
+ * Форматы: "90", "1:30", "1ч30м", "1h30m", "1.5ч"
+ */
+function parseMinutes(raw) {
+    if (!raw) return 0;
+    const s = raw.trim().toLowerCase();
+    if (!s) return 0;
+    const colon = s.match(/^(\d+):(\d{1,2})$/);
+    if (colon) return Math.round(+colon[1]*60 + +colon[2]);
+    const hm = s.match(/^(\d+)\s*[чh]\s*(\d*)\s*[мm]?$/);
+    if (hm) return Math.round(+hm[1]*60 + (+hm[2]||0));
+    const dec = s.match(/^(\d+[.,]\d+)\s*[чh]?$/);
+    if (dec) return Math.round(parseFloat(dec[1].replace(',','.'))*60);
+    const num = s.match(/^(\d+)$/);
+    if (num) return +num[1];
+    return 0;
+}
+
+function fmtTime(mins, short) {
+    if (!mins || mins <= 0) return short ? '' : '0 мин';
+    if (mins < 60) return mins+(short?'м':' мин');
+    const h = Math.floor(mins/60), m = mins%60;
+    if (short) return m ? h+':'+String(m).padStart(2,'0') : h+'ч';
+    return m ? h+'ч '+m+'м' : h+'ч';
+}
+
+const MONTHS_RU  = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+const WEEKDAYS_RU = ['воскресенье','понедельник','вторник','среда','четверг','пятница','суббота'];
+
+/* ===================================================
+   SEED — данные мая и июня
+=================================================== */
+const SEED = {
+    // Май 2026 — 780 мин равномерно (по 1 сессии в день)
+    "2026-05-01":[26],"2026-05-02":[26],"2026-05-03":[26],"2026-05-04":[26],"2026-05-05":[26],
+    "2026-05-06":[25],"2026-05-07":[25],"2026-05-08":[25],"2026-05-09":[25],"2026-05-10":[25],
+    "2026-05-11":[25],"2026-05-12":[25],"2026-05-13":[25],"2026-05-14":[25],"2026-05-15":[25],
+    "2026-05-16":[25],"2026-05-17":[25],"2026-05-18":[25],"2026-05-19":[25],"2026-05-20":[25],
+    "2026-05-21":[25],"2026-05-22":[25],"2026-05-23":[25],"2026-05-24":[25],"2026-05-25":[25],
+    "2026-05-26":[25],"2026-05-27":[25],"2026-05-28":[25],"2026-05-29":[25],"2026-05-30":[25],
+    "2026-05-31":[25],
+    // Июнь 2026 — реальные сессии из чата
+    "2026-06-01":[25,41],         // 24:43 + 40:44
+    "2026-06-02":[24,60,48],      // 23:31 + 1:00:00 + 48:13
+    "2026-06-03":[27,50],         // 26:54 + 50:02
+    "2026-06-04":[60,28,51],      // 1:00:00 + 27:32 + 51:09
+    "2026-06-05":[30,59],         // 29:45 + 59:29
+    "2026-06-06":[31,41],         // 30:32 + 41:14
+    "2026-06-08":[20,51],         // 19:48 + 50:45
+    "2026-06-09":[23,38,55],      // 23:22 + 38:01 + 55:05
+    "2026-06-10":[22,41],         // 22:09 + 40:44
+    "2026-06-11":[27,50],         // 27:06 + 50:02
+    "2026-06-12":[24,51],         // 23:50 + 51:09
+    "2026-06-13":[48],            // 48:13
+};
+
+function applySeed() {
+    let data = loadData();
+    data = migrateData(data);
+    let changed = false;
+    for (const [k,v] of Object.entries(SEED)) {
+        if (!(k in data)) { data[k] = v; changed = true; }
+    }
+    if (changed) saveData(data);
+}
+
+/* ===================================================
+   STATISTICS
+=================================================== */
+function calcStats(data) {
+    const prefix = viewYear+'-'+String(viewMonth+1).padStart(2,'0')+'-';
+    let monthMins=0, monthDays=0, monthSessions=0;
+    for (const [k,v] of Object.entries(data)) {
+        if (k.startsWith(prefix)) {
+            const t = dayTotal(v);
+            if (t>0) { monthMins+=t; monthDays++; monthSessions += v.length; }
+        }
+    }
+    const allMins = Object.values(data).reduce((s,v)=>s+dayTotal(v),0);
+    const avg = monthSessions>0 ? Math.round(monthMins/monthSessions) : 0;
+    return { monthMins, monthDays, monthSessions, avg, allMins };
+}
+
+/* ===================================================
+   RENDER — STATS
+=================================================== */
+function renderStats() {
+    const { monthMins, monthDays, avg, allMins } = calcStats(loadData());
+    document.getElementById('stat-days').textContent  = monthDays;
+    document.getElementById('stat-month').textContent = fmtTime(monthMins);
+    document.getElementById('stat-month-h').textContent = monthMins>=60 ? '('+monthMins+' мин)':'';
+    document.getElementById('stat-avg').textContent   = avg ? fmtTime(avg):'—';
+    document.getElementById('stat-all').textContent   = fmtTime(allMins);
+    document.getElementById('stat-all-h').textContent = allMins>=60 ? '('+allMins+' мин)':'';
+}
+
+/* ===================================================
+   RENDER — CHART
+=================================================== */
+function renderChart() {
+    const data = loadData();
+    const days = daysInMonth(viewYear,viewMonth);
+    const vals = [];
+    for (let d=1;d<=days;d++) {
+        const k = toKey(viewYear,viewMonth,d);
+        vals.push(dayTotal(data[k]||[]));
+    }
+    const maxVal = Math.max(...vals,1);
+    const chartEl = document.getElementById('chart-bars');
+    chartEl.innerHTML = '';
+    vals.forEach((val,i)=>{
+        const day=i+1, pct=val>0?Math.max((val/maxVal)*100,8):2;
+        const intensity=val/maxVal;
+        const col=document.createElement('div'); col.className='bar-col';
+        const bar=document.createElement('div'); bar.className='bar';
+        bar.style.height=pct+'%';
+        if(val>0){
+            bar.style.background=intensity>0.7
+                ?'linear-gradient(to top,#059669,#6ee7b7)'
+                :'linear-gradient(to top,#10b981,#34d399)';
+            bar.style.opacity=0.5+intensity*0.5;
+            const tip=document.createElement('div'); tip.className='bar-tooltip';
+            tip.textContent=day+': '+fmtTime(val); col.appendChild(tip);
+        } else { bar.style.background='rgba(255,255,255,0.05)'; }
+        col.appendChild(bar); chartEl.appendChild(col);
+    });
+}
+
+/* ===================================================
+   RENDER — CALENDAR
+=================================================== */
+function renderCalendar() {
+    const data = loadData();
+    const today = new Date();
+    const grid = document.getElementById('calendar-grid');
+    document.getElementById('month-title').textContent = MONTHS_RU[viewMonth]+' '+viewYear;
+
+    const firstDow = new Date(viewYear,viewMonth,1).getDay();
+    const offset = firstDow===0?6:firstDow-1;
+    const total = daysInMonth(viewYear,viewMonth);
+    grid.innerHTML='';
+
+    for(let i=0;i<offset;i++){
+        const el=document.createElement('div'); el.className='day-cell empty'; grid.appendChild(el);
+    }
+
+    for(let day=1;day<=total;day++){
+        const key=toKey(viewYear,viewMonth,day);
+        const sessions = data[key]||[];
+        const total_mins = dayTotal(sessions);
+        const count = sessions.filter(v=>v>0).length;
+        const isToday = today.getFullYear()===viewYear && today.getMonth()===viewMonth && today.getDate()===day;
+
+        const cell=document.createElement('div');
+        cell.className='day-cell'+(isToday?' today':'')+(total_mins>0?' has-workout':'');
+        cell.setAttribute('role','button');
+        cell.setAttribute('tabindex','0');
+        cell.setAttribute('aria-label',day+' '+MONTHS_RU[viewMonth]+(total_mins>0?', '+fmtTime(total_mins):''));
+        cell.setAttribute('data-key',key);
+
+        const numEl=document.createElement('div'); numEl.className='day-num'; numEl.textContent=day;
+        cell.appendChild(numEl);
+
+        if(total_mins>0){
+            const totalEl=document.createElement('div'); totalEl.className='day-total';
+            totalEl.textContent=fmtTime(total_mins,true); cell.appendChild(totalEl);
+        }
+
+        // Бейдж с кол-вом сессий (если >1)
+        if(count>1){
+            const badge=document.createElement('div'); badge.className='day-badge';
+            badge.textContent='×'+count; cell.appendChild(badge);
+        }
+
+        // Иконка «+» при наведении
+        const hint=document.createElement('div'); hint.className='day-add-hint';
+        hint.textContent='+'; cell.appendChild(hint);
+
+        const barEl=document.createElement('div'); barEl.className='day-bar'; cell.appendChild(barEl);
+
+        cell.addEventListener('click', ()=>openDayModal(key,viewYear,viewMonth,day));
+        cell.addEventListener('keydown', e=>{ if(e.key==='Enter'||e.key===' ') openDayModal(key,viewYear,viewMonth,day); });
+
+        grid.appendChild(cell);
+    }
+}
+
+/* ===================================================
+   DAY MODAL
+=================================================== */
+function openDayModal(key, year, month, day) {
+    activeKey = key;
+    const data = loadData();
+    const sessions = data[key]||[];
+
+    // Заголовок
+    const dateObj = new Date(year,month,day);
+    const weekday = WEEKDAYS_RU[dateObj.getDay()];
+    document.getElementById('day-modal-date').textContent =
+        weekday.charAt(0).toUpperCase()+weekday.slice(1)+', '+day+' '+MONTHS_RU[month].toLowerCase()+' '+year;
+    document.getElementById('day-modal-title').textContent =
+        sessions.length > 0 ? sessions.length+' '+(sessions.length===1?'сессия':sessions.length<5?'сессии':'сессий') : 'Нет тренировок';
+
+    renderSessionList(key);
+    document.getElementById('day-modal').classList.add('open');
+}
+
+function closeDayModal() {
+    document.getElementById('day-modal').classList.remove('open');
+    activeKey = null;
+    render(); // обновляем календарь после закрытия
+}
+
+function renderSessionList(key) {
+    const data = loadData();
+    const sessions = (data[key]||[]).filter(v=>v>0);
+    const list = document.getElementById('session-list');
+    list.innerHTML = '';
+
+    sessions.forEach((mins, idx) => {
+        const row = document.createElement('div');
+        row.className = 'session-row';
+
+        const num = document.createElement('div');
+        num.className = 'session-num';
+        num.textContent = idx+1;
+
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'session-input';
+        input.value = fmtTime(mins, true);
+        input.placeholder = 'напр. 45 или 1:30';
+        input.setAttribute('aria-label','Сессия '+(idx+1));
+
+        input.addEventListener('focus', ()=>{ input.value = String(mins); });
+        input.addEventListener('blur', ()=>{ saveSession(key,idx,input.value); });
+        input.addEventListener('keydown', e=>{
+            if(e.key==='Enter') input.blur();
+            if(e.key==='Escape'){ input.value=fmtTime(mins,true); input.blur(); }
+        });
+
+        const hint = document.createElement('div');
+        hint.className = 'session-hint';
+        hint.textContent = fmtTime(mins);
+
+        const del = document.createElement('button');
+        del.className = 'session-delete';
+        del.setAttribute('aria-label','Удалить сессию '+(idx+1));
+        del.innerHTML = '&#10005;';
+        del.addEventListener('click', ()=>deleteSession(key,idx));
+
+        row.appendChild(num);
+        row.appendChild(input);
+        row.appendChild(hint);
+        row.appendChild(del);
+        list.appendChild(row);
+    });
+
+    updateDayModalTotal(key);
+    updateDayModalTitle(key);
+}
+
+function updateDayModalTotal(key) {
+    const data = loadData();
+    const sessions = data[key]||[];
+    const total = dayTotal(sessions);
+    document.getElementById('day-modal-total').textContent = total>0 ? fmtTime(total) : '—';
+}
+
+function updateDayModalTitle(key) {
+    const data = loadData();
+    const count = (data[key]||[]).filter(v=>v>0).length;
+    document.getElementById('day-modal-title').textContent =
+        count>0 ? count+' '+(count===1?'сессия':count<5?'сессии':'сессий') : 'Нет тренировок';
+}
+
+function saveSession(key, idx, raw) {
+    const data = loadData();
+    const sessions = data[key]||[];
+    const mins = parseMinutes(raw);
+    if(mins>0) {
+        sessions[idx] = mins;
+        data[key] = sessions;
+        saveData(data);
+        renderSessionList(key); // ре-рендер строк после сохранения
+    } else {
+        deleteSession(key,idx);
+    }
+}
+
+function deleteSession(key, idx) {
+    const data = loadData();
+    const sessions = data[key]||[];
+    sessions.splice(idx,1);
+    if(sessions.length>0) data[key]=sessions;
+    else delete data[key];
+    saveData(data);
+    renderSessionList(key);
+}
+
+function addSession(key) {
+    const data = loadData();
+    const sessions = data[key]||[];
+    sessions.push(0); // временная заглушка, пользователь заполнит
+    data[key] = sessions;
+    saveData(data);
+
+    // Добавляем строку и сразу фокусируем её
+    const list = document.getElementById('session-list');
+    const idx = sessions.length-1;
+    const row = document.createElement('div'); row.className='session-row';
+    const num = document.createElement('div'); num.className='session-num'; num.textContent=idx+1;
+    const input = document.createElement('input'); input.type='text'; input.className='session-input';
+    input.placeholder='напр. 45 или 1:30';
+    input.setAttribute('aria-label','Сессия '+(idx+1));
+    input.addEventListener('focus', ()=>{ if(+input.value>0) input.value=String(sessions[idx]); });
+    input.addEventListener('blur', ()=>{ saveSession(key,idx,input.value); });
+    input.addEventListener('keydown', e=>{
+        if(e.key==='Enter') input.blur();
+        if(e.key==='Escape'){ deleteSession(key,idx); }
+    });
+    const hint=document.createElement('div'); hint.className='session-hint';
+    const del=document.createElement('button'); del.className='session-delete';
+    del.setAttribute('aria-label','Удалить сессию '+(idx+1));
+    del.innerHTML='&#10005;';
+    del.addEventListener('click',()=>deleteSession(key,idx));
+    row.appendChild(num); row.appendChild(input); row.appendChild(hint); row.appendChild(del);
+    list.appendChild(row);
+    setTimeout(()=>input.focus(),50);
+    updateDayModalTitle(key);
+}
+
+/* ===================================================
+   EXPORT / IMPORT
+=================================================== */
+function exportJSON() {
+    const blob = new Blob([JSON.stringify(loadData(),null,2)],{type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href=url;
+    a.download='yoga_garden_'+new Date().toISOString().slice(0,10)+'.json';
+    a.click(); URL.revokeObjectURL(url);
+    showToast('✓ Данные экспортированы');
+}
+
+function importJSON(file) {
+    const reader = new FileReader();
+    reader.onload = e => {
+        try {
+            const imported = JSON.parse(e.target.result);
+            if(typeof imported!=='object'||Array.isArray(imported)) throw new Error();
+            for(const k of Object.keys(imported)) {
+                if(!/^\d{4}-\d{2}-\d{2}$/.test(k)) throw new Error('bad key');
+            }
+            const merged = {...loadData(),...imported};
+            saveData(migrateData(merged));
+            render();
+            showToast('✓ Импортировано '+Object.keys(imported).length+' записей');
+        } catch { showToast('✗ Ошибка: неверный формат файла'); }
+    };
+    reader.readAsText(file);
+}
+
+/* ===================================================
+   TOAST
+=================================================== */
+let toastTimer;
+function showToast(msg, ms) {
+    ms=ms||2600;
+    const el=document.getElementById('toast'); el.textContent=msg; el.classList.add('show');
+    clearTimeout(toastTimer); toastTimer=setTimeout(()=>el.classList.remove('show'),ms);
+}
+
+/* ===================================================
+   FULL RENDER
+=================================================== */
+function render() { renderCalendar(); renderStats(); renderChart(); }
+
+/* ===================================================
+   INIT
+=================================================== */
+function init() {
+    // Применяем seed и мигрируем старый формат
+    applySeed();
+    const existing = loadData();
+    migrateData(existing);
+
+    const now = new Date();
+    viewYear = now.getFullYear(); viewMonth = now.getMonth();
+
+    document.getElementById('btn-prev').addEventListener('click', ()=>{
+        viewMonth--; if(viewMonth<0){viewMonth=11;viewYear--;} render();
+    });
+    document.getElementById('btn-next').addEventListener('click', ()=>{
+        viewMonth++; if(viewMonth>11){viewMonth=0;viewYear++;} render();
+    });
+    document.getElementById('btn-today').addEventListener('click', ()=>{
+        const n=new Date(); viewYear=n.getFullYear(); viewMonth=n.getMonth(); render();
+    });
+
+    // Day modal
+    document.getElementById('day-modal-close').addEventListener('click', closeDayModal);
+    document.getElementById('btn-add-session').addEventListener('click', ()=>{ if(activeKey) addSession(activeKey); });
+    document.getElementById('day-modal').addEventListener('click', e=>{
+        if(e.target===e.currentTarget) closeDayModal();
+    });
+
+    // Export/Import
+    document.getElementById('btn-export').addEventListener('click', exportJSON);
+    document.getElementById('btn-import').addEventListener('click', ()=>document.getElementById('file-input').click());
+    document.getElementById('file-input').addEventListener('change', e=>{
+        if(e.target.files[0]){ importJSON(e.target.files[0]); e.target.value=''; }
+    });
+
+    // Clear
+    document.getElementById('btn-clear').addEventListener('click', ()=>document.getElementById('confirm-modal').classList.add('open'));
+    document.getElementById('modal-cancel').addEventListener('click', ()=>document.getElementById('confirm-modal').classList.remove('open'));
+    document.getElementById('modal-confirm').addEventListener('click', ()=>{
+        localStorage.removeItem(STORAGE_KEY);
+        document.getElementById('confirm-modal').classList.remove('open');
+        applySeed(); render(); showToast('Данные удалены');
+    });
+    document.getElementById('confirm-modal').addEventListener('click', e=>{
+        if(e.target===e.currentTarget) e.currentTarget.classList.remove('open');
+    });
+
+    document.addEventListener('keydown', e=>{
+        if(e.key==='Escape'){
+            document.getElementById('day-modal').classList.remove('open');
+            document.getElementById('confirm-modal').classList.remove('open');
+            activeKey=null;
+            render();
+        }
+    });
+
+    render();
+}
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
