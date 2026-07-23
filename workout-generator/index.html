@@ -1,0 +1,1007 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FYSM ZERO — Генератор Тренировок</title>
+  <meta name="description" content="FYSM ZERO — генератор тренировок из 27 алгоритмов. Почувствуй себя нулём.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    /* ===== RESET & BASE ===== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg-primary: #0a0a0a;
+      --bg-secondary: #111111;
+      --bg-card: #181818;
+      --bg-card-hover: #202020;
+      --bg-elevated: #252525;
+      --border: #2a2a2a;
+      --border-light: #3a3a3a;
+      --text-primary: #f0f0f0;
+      --text-secondary: #909090;
+      --text-muted: #606060;
+      --accent: #ffffff;
+      --accent-glow: rgba(255, 255, 255, 0.15);
+      --accent-hover: #e0e0e0;
+      --green: #c0c0c0;
+      --green-bg: rgba(255, 255, 255, 0.06);
+      --yellow: #a8a8a8;
+      --yellow-bg: rgba(255, 255, 255, 0.06);
+      --orange: #909090;
+      --orange-bg: rgba(255, 255, 255, 0.06);
+      --red: #787878;
+      --red-bg: rgba(255, 255, 255, 0.06);
+      --crimson: #606060;
+      --crimson-bg: rgba(255, 255, 255, 0.06);
+      --radius: 14px;
+      --radius-sm: 10px;
+      --radius-xs: 7px;
+      --shadow: 0 4px 24px rgba(0,0,0,0.5);
+      --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    html { font-size: 16px; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100dvh;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    /* ===== LAYOUT ===== */
+    .app {
+      max-width: 520px;
+      margin: 0 auto;
+      padding: 20px 16px 100px;
+      position: relative;
+    }
+
+    /* ===== HEADER ===== */
+    .header {
+      text-align: center;
+      padding: 32px 0 24px;
+      position: relative;
+    }
+    .header__logo {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 12px;
+      animation: pulse-glow 2.5s ease-in-out infinite;
+    }
+    .header__logo svg {
+      width: 42px;
+      height: 42px;
+    }
+    @keyframes pulse-glow {
+      0%, 100% { filter: drop-shadow(0 0 6px var(--accent-glow)); transform: scale(1); }
+      50% { filter: drop-shadow(0 0 18px var(--accent-glow)); transform: scale(1.08); }
+    }
+    .header__title {
+      font-size: 1.6rem;
+      font-weight: 800;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      background: linear-gradient(135deg, var(--text-primary), var(--accent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .header__subtitle {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      margin-top: 4px;
+      font-weight: 500;
+      font-style: italic;
+      letter-spacing: 0.5px;
+    }
+    .header__settings-btn {
+      position: absolute;
+      top: 32px;
+      right: 0;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      font-size: 1.2rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: var(--transition);
+    }
+    .header__settings-btn:hover {
+      background: var(--bg-card-hover);
+      color: var(--accent);
+      border-color: var(--accent);
+      transform: rotate(45deg);
+    }
+
+    /* ===== MODE SELECTOR ===== */
+    .mode-section {
+      margin-bottom: 24px;
+    }
+    .mode-section__label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      margin-bottom: 10px;
+    }
+    .mode-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .mode-btn {
+      padding: 12px 10px;
+      border-radius: var(--radius-sm);
+      border: 1.5px solid var(--border);
+      background: var(--bg-card);
+      color: var(--text-secondary);
+      font-family: inherit;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      justify-content: center;
+    }
+    .mode-btn:hover { background: var(--bg-card-hover); color: var(--text-primary); }
+    .mode-btn.active {
+      border-color: var(--accent);
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--accent);
+      box-shadow: 0 0 20px rgba(255, 255, 255, 0.05);
+    }
+    .mode-btn__emoji { font-size: 1.1rem; }
+
+    /* ===== GENERATE BUTTON ===== */
+    .generate-btn {
+      width: 100%;
+      padding: 18px;
+      border: none;
+      border-radius: var(--radius);
+      background: linear-gradient(135deg, #ffffff, #a0a0a0);
+      color: #0a0a0a;
+      font-family: inherit;
+      font-size: 1.05rem;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+      cursor: pointer;
+      transition: var(--transition);
+      box-shadow: 0 4px 24px rgba(255, 255, 255, 0.12);
+      margin-bottom: 28px;
+      position: relative;
+      overflow: hidden;
+    }
+    .generate-btn::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, transparent 40%, rgba(255,255,255,0.12) 50%, transparent 60%);
+      transform: translateX(-100%);
+      transition: transform 0.6s ease;
+    }
+    .generate-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 32px rgba(255, 255, 255, 0.18);
+    }
+    .generate-btn:hover::before { transform: translateX(100%); }
+    .generate-btn:active { transform: translateY(0) scale(0.98); }
+
+    /* ===== RESULT CARD ===== */
+    .result {
+      animation: slideUp 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .result__meta {
+      display: flex;
+      justify-content: center;
+      gap: 24px;
+      margin-bottom: 18px;
+    }
+    .meta-chip {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 50px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+    .meta-chip__icon { font-size: 1rem; }
+    .meta-chip__value { color: var(--accent); }
+
+    .algo-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin-bottom: 10px;
+      overflow: hidden;
+      transition: var(--transition);
+    }
+    .algo-card:hover { border-color: var(--border-light); background: var(--bg-card-hover); }
+
+    .algo-card__img {
+      width: 100%;
+      display: block;
+      border-radius: var(--radius) var(--radius) 0 0;
+      background: #f5f5f5;
+    }
+
+    .algo-card__info {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 18px;
+    }
+
+    .algo-card__number {
+      width: 44px;
+      height: 44px;
+      border-radius: var(--radius-xs);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.85rem;
+      font-weight: 800;
+      flex-shrink: 0;
+      background: var(--bg-elevated);
+      color: var(--text-secondary);
+    }
+
+    .algo-card__body { flex: 1; min-width: 0; }
+    .algo-card__name {
+      font-size: 0.95rem;
+      font-weight: 700;
+      margin-bottom: 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .algo-card__detail {
+      font-size: 0.76rem;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .algo-card__reps {
+      text-align: right;
+      flex-shrink: 0;
+    }
+    .algo-card__reps-value {
+      font-size: 1.2rem;
+      font-weight: 800;
+      color: var(--text-primary);
+    }
+    .algo-card__reps-label {
+      font-size: 0.68rem;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    /* Difficulty badges */
+    .badge {
+      font-size: 0.68rem;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 50px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+    .badge--easy { background: var(--green-bg); color: var(--green); }
+    .badge--novice { background: var(--yellow-bg); color: var(--yellow); }
+    .badge--medium { background: var(--orange-bg); color: var(--orange); }
+    .badge--hard { background: var(--red-bg); color: var(--red); }
+    .badge--extreme { background: var(--crimson-bg); color: var(--crimson); }
+
+    /* ===== SETTINGS MODAL ===== */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.65);
+      backdrop-filter: blur(6px);
+      z-index: 100;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s, visibility 0.3s;
+    }
+    .modal-overlay.open { opacity: 1; visibility: visible; }
+
+    .modal {
+      background: var(--bg-secondary);
+      border-radius: 20px 20px 0 0;
+      width: 100%;
+      max-width: 520px;
+      max-height: 88dvh;
+      display: flex;
+      flex-direction: column;
+      transform: translateY(100%);
+      transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .modal-overlay.open .modal { transform: translateY(0); }
+
+    .modal__header {
+      padding: 20px 20px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .modal__title {
+      font-size: 1.1rem;
+      font-weight: 700;
+    }
+    .modal__close {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      background: var(--bg-card);
+      color: var(--text-secondary);
+      font-size: 1.1rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: var(--transition);
+    }
+    .modal__close:hover { background: var(--bg-card-hover); color: var(--text-primary); }
+
+    .modal__body {
+      overflow-y: auto;
+      padding: 12px 16px 32px;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    /* Settings list */
+    .settings-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      border-radius: var(--radius-sm);
+      transition: var(--transition);
+    }
+    .settings-item:hover { background: var(--bg-card); }
+
+    .settings-item__thumb {
+      width: 52px;
+      height: 36px;
+      border-radius: 6px;
+      object-fit: cover;
+      background: #f5f5f5;
+      flex-shrink: 0;
+    }
+
+    .settings-item__num {
+      width: 36px;
+      height: 36px;
+      border-radius: var(--radius-xs);
+      background: var(--bg-elevated);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      flex-shrink: 0;
+    }
+    .settings-item__info {
+      flex: 1;
+      min-width: 0;
+    }
+    .settings-item__name {
+      font-size: 0.88rem;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .settings-item__difficulty {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+    .settings-item__edit-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: var(--transition);
+      flex-shrink: 0;
+    }
+    .settings-item__edit-btn:hover {
+      background: var(--bg-elevated);
+      color: var(--accent);
+      border-color: var(--accent);
+    }
+
+    /* Inline edit mode */
+    .settings-item--editing {
+      background: var(--bg-card);
+      border: 1px solid var(--border-light);
+      flex-wrap: wrap;
+    }
+    .settings-item__edit-form {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .settings-item__edit-form input {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: var(--radius-xs);
+      border: 1px solid var(--border);
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      font-family: inherit;
+      font-size: 0.88rem;
+      font-weight: 500;
+      outline: none;
+      transition: var(--transition);
+    }
+    .settings-item__edit-form input:focus { border-color: var(--accent); }
+
+    .settings-item__edit-form select {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: var(--radius-xs);
+      border: 1px solid var(--border);
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      font-family: inherit;
+      font-size: 0.88rem;
+      font-weight: 500;
+      outline: none;
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239090a8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      transition: var(--transition);
+    }
+    .settings-item__edit-form select:focus { border-color: var(--accent); }
+
+    .edit-actions {
+      display: flex;
+      gap: 8px;
+    }
+    .edit-actions button {
+      flex: 1;
+      padding: 9px;
+      border-radius: var(--radius-xs);
+      border: none;
+      font-family: inherit;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    .btn-save {
+      background: var(--accent);
+      color: #fff;
+    }
+    .btn-save:hover { background: var(--accent-hover); }
+    .btn-cancel {
+      background: var(--bg-elevated);
+      color: var(--text-secondary);
+      border: 1px solid var(--border) !important;
+    }
+    .btn-cancel:hover { background: var(--bg-card-hover); color: var(--text-primary); }
+
+    /* ===== PRESET SECTION ===== */
+    .preset-section {
+      margin-bottom: 24px;
+    }
+    .preset-section__label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      margin-bottom: 10px;
+    }
+    .preset-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+    .preset-btn {
+      padding: 12px 6px;
+      border-radius: var(--radius-sm);
+      border: 1.5px solid var(--border);
+      background: var(--bg-card);
+      color: var(--text-secondary);
+      font-family: inherit;
+      font-size: 0.9rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: var(--transition);
+      text-align: center;
+      line-height: 1.2;
+    }
+    .preset-btn:hover { background: var(--bg-card-hover); color: var(--text-primary); }
+    .preset-btn.active {
+      border-color: var(--accent);
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--accent);
+      box-shadow: 0 0 20px rgba(255, 255, 255, 0.05);
+    }
+    .preset-btn__sub {
+      display: block;
+      font-size: 0.62rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+    .preset-btn.active .preset-btn__sub { color: rgba(255, 255, 255, 0.4); }
+
+    /* ===== EMPTY STATE ===== */
+    .empty-state {
+      text-align: center;
+      padding: 48px 20px;
+      color: var(--text-muted);
+    }
+    .empty-state__icon {
+      font-size: 3rem;
+      margin-bottom: 12px;
+      opacity: 0.5;
+    }
+    .empty-state__text {
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+
+    /* ===== SCROLLBAR ===== */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--border-light); }
+
+    /* ===== RESPONSIVE ===== */
+    @media (min-width: 480px) {
+      .app { padding: 24px 24px 100px; }
+      .header { padding: 40px 0 28px; }
+      .header__title { font-size: 1.8rem; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="app">
+  <!-- HEADER -->
+  <header class="header">
+    <div class="header__logo">
+      <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M50 8 L95 85 L5 85 Z" stroke="currentColor" stroke-width="7" stroke-linejoin="round" fill="none" />
+      </svg>
+    </div>
+    <h1 class="header__title">FYSM ZERO</h1>
+    <p class="header__subtitle">Почувствуй себя нулём</p>
+    <button class="header__settings-btn" id="open-settings" title="Настройки алгоритмов" aria-label="Открыть настройки">⚙</button>
+  </header>
+
+  <!-- MODE SELECTOR -->
+  <section class="mode-section">
+    <p class="mode-section__label">Режим генерации</p>
+    <div class="mode-grid" id="mode-grid">
+      <button class="mode-btn active" data-mode="random">
+        <span class="mode-btn__emoji">🎲</span> Полный рандом
+      </button>
+      <button class="mode-btn" data-mode="easy">
+        <span class="mode-btn__emoji">🟢</span> Easy Mode
+      </button>
+      <button class="mode-btn" data-mode="medium">
+        <span class="mode-btn__emoji">🟠</span> Medium Mode
+      </button>
+      <button class="mode-btn" data-mode="hard">
+        <span class="mode-btn__emoji">🔴</span> Hard Mode
+      </button>
+    </div>
+  </section>
+
+  <!-- PRESETS -->
+  <section class="preset-section">
+    <p class="preset-section__label">Статодинамика</p>
+    <div class="preset-grid" id="preset-grid">
+      <button class="preset-btn" data-rounds="2" data-reps="8">2×8<span class="preset-btn__sub">кругов × повт.</span></button>
+      <button class="preset-btn" data-rounds="2" data-reps="12">2×12<span class="preset-btn__sub">кругов × повт.</span></button>
+      <button class="preset-btn" data-rounds="4" data-reps="4">4×4<span class="preset-btn__sub">кругов × повт.</span></button>
+      <button class="preset-btn active" data-rounds="4" data-reps="8">4×8<span class="preset-btn__sub">кругов × повт.</span></button>
+      <button class="preset-btn" data-rounds="4" data-reps="12">4×12<span class="preset-btn__sub">кругов × повт.</span></button>
+      <button class="preset-btn" data-rounds="4" data-reps="16">4×16<span class="preset-btn__sub">кругов × повт.</span></button>
+      <button class="preset-btn" data-rounds="8" data-reps="4">8×4<span class="preset-btn__sub">кругов × повт.</span></button>
+      <button class="preset-btn" data-rounds="8" data-reps="8">8×8<span class="preset-btn__sub">кругов × повт.</span></button>
+    </div>
+  </section>
+
+  <!-- GENERATE -->
+  <button class="generate-btn" id="generate-btn">⚡ Сгенерировать</button>
+
+  <!-- RESULT -->
+  <div id="result-area"></div>
+</div>
+
+<!-- SETTINGS MODAL -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal">
+    <div class="modal__header">
+      <h2 class="modal__title">⚙ Настройки алгоритмов</h2>
+      <button class="modal__close" id="close-settings" aria-label="Закрыть">✕</button>
+    </div>
+    <div class="modal__body" id="settings-list"></div>
+  </div>
+</div>
+
+<script>
+  /* ===== DATA ===== */
+  const DIFFICULTIES = ['Easy', 'Novice', 'Medium', 'Hard', 'Extreme'];
+  const DIFF_CLASS = { Easy: 'easy', Novice: 'novice', Medium: 'medium', Hard: 'hard', Extreme: 'extreme' };
+  const STORAGE_KEY = 'yg_algorithms_v1';
+  const PRESET_KEY = 'yg_preset_v1';
+  const PRESETS = [
+    { rounds: 2, reps: 8 },
+    { rounds: 2, reps: 12 },
+    { rounds: 4, reps: 4 },
+    { rounds: 4, reps: 8 },
+    { rounds: 4, reps: 12 },
+    { rounds: 4, reps: 16 },
+    { rounds: 8, reps: 4 },
+    { rounds: 8, reps: 8 },
+  ];
+
+  function defaultAlgorithms() {
+    return Array.from({ length: 27 }, (_, i) => ({
+      id: i + 1,
+      name: `Алгоритм ${i + 1}`,
+      difficulty: 'Medium'
+    }));
+  }
+
+  function loadAlgorithms() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) return JSON.parse(raw);
+    } catch {}
+    return defaultAlgorithms();
+  }
+
+  function saveAlgorithms() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(algorithms));
+  }
+
+  function loadPreset() {
+    try {
+      const raw = localStorage.getItem(PRESET_KEY);
+      if (raw) return JSON.parse(raw);
+    } catch {}
+    return { rounds: 4, reps: 8 };
+  }
+
+  function savePreset() {
+    localStorage.setItem(PRESET_KEY, JSON.stringify(selectedPreset));
+  }
+
+  let algorithms = loadAlgorithms();
+  let selectedPreset = loadPreset();
+  let currentMode = 'random';
+  let editingId = null;
+
+  /* ===== DOM ===== */
+  const $modeGrid = document.getElementById('mode-grid');
+  const $presetGrid = document.getElementById('preset-grid');
+  const $generateBtn = document.getElementById('generate-btn');
+  const $resultArea = document.getElementById('result-area');
+  const $overlay = document.getElementById('modal-overlay');
+  const $settingsList = document.getElementById('settings-list');
+
+  /* ===== MODE SELECTION ===== */
+  $modeGrid.addEventListener('click', (e) => {
+    const btn = e.target.closest('.mode-btn');
+    if (!btn) return;
+    currentMode = btn.dataset.mode;
+    $modeGrid.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  });
+
+  /* ===== PRESET SELECTION ===== */
+  function syncPresetUI() {
+    $presetGrid.querySelectorAll('.preset-btn').forEach(btn => {
+      const r = parseInt(btn.dataset.rounds);
+      const p = parseInt(btn.dataset.reps);
+      btn.classList.toggle('active', r === selectedPreset.rounds && p === selectedPreset.reps);
+    });
+  }
+  syncPresetUI();
+
+  $presetGrid.addEventListener('click', (e) => {
+    const btn = e.target.closest('.preset-btn');
+    if (!btn) return;
+    selectedPreset = {
+      rounds: parseInt(btn.dataset.rounds),
+      reps: parseInt(btn.dataset.reps)
+    };
+    syncPresetUI();
+    savePreset();
+  });
+
+  /* ===== GENERATION LOGIC ===== */
+  function shuffle(arr) {
+    const a = [...arr];
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  function pickRandom(arr, n) {
+    return shuffle(arr).slice(0, n);
+  }
+
+  function generateWorkout() {
+    let pool;
+    switch (currentMode) {
+      case 'easy': {
+        const primary = algorithms.filter(a => a.difficulty === 'Easy' || a.difficulty === 'Novice');
+        const fallback = algorithms.filter(a => a.difficulty === 'Medium');
+        pool = [...primary, ...primary, ...fallback]; // double-weight primaries
+        break;
+      }
+      case 'medium': {
+        const primary = algorithms.filter(a => a.difficulty === 'Medium');
+        const fallback = algorithms.filter(a => a.difficulty === 'Novice' || a.difficulty === 'Hard');
+        pool = [...primary, ...primary, ...fallback];
+        break;
+      }
+      case 'hard': {
+        const primary = algorithms.filter(a => a.difficulty === 'Hard' || a.difficulty === 'Extreme');
+        const fallback = algorithms.filter(a => a.difficulty === 'Medium');
+        pool = [...primary, ...primary, ...fallback];
+        break;
+      }
+      default:
+        pool = [...algorithms];
+    }
+
+    if (pool.length < 3) pool = [...algorithms]; // fallback
+
+    // Pick 3 unique algorithms
+    const unique = new Map();
+    const shuffled = shuffle(pool);
+    for (const algo of shuffled) {
+      if (!unique.has(algo.id)) unique.set(algo.id, algo);
+      if (unique.size === 3) break;
+    }
+
+    // If still not enough, fill from all
+    if (unique.size < 3) {
+      for (const algo of shuffle(algorithms)) {
+        if (!unique.has(algo.id)) unique.set(algo.id, algo);
+        if (unique.size === 3) break;
+      }
+    }
+
+    return [...unique.values()];
+  }
+
+  function renderResult(workout) {
+    const { rounds, reps } = selectedPreset;
+
+    const cards = workout.map(algo => {
+      const diffClass = DIFF_CLASS[algo.difficulty] || 'medium';
+      return `
+        <div class="algo-card">
+          <img class="algo-card__img" src="images/algo_${algo.id}.png" alt="Алгоритм #${algo.id}" loading="lazy">
+          <div class="algo-card__info">
+            <div class="algo-card__number">#${algo.id}</div>
+            <div class="algo-card__body">
+              <div class="algo-card__name">${escapeHtml(algo.name)}</div>
+              <div class="algo-card__detail">
+                <span class="badge badge--${diffClass}">${algo.difficulty}</span>
+              </div>
+            </div>
+            <div class="algo-card__reps">
+              <div class="algo-card__reps-value">${reps}</div>
+              <div class="algo-card__reps-label">повт.</div>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    $resultArea.innerHTML = `
+      <div class="result">
+        <div class="result__meta">
+          <div class="meta-chip">
+            <span class="meta-chip__icon">🔄</span>
+            <span class="meta-chip__value">${rounds}</span> кругов
+          </div>
+          <div class="meta-chip">
+            <span class="meta-chip__icon">🏋️</span>
+            <span class="meta-chip__value">3</span> упражнения
+          </div>
+          <div class="meta-chip">
+            <span class="meta-chip__icon">💪</span>
+            <span class="meta-chip__value">${rounds}×${reps}</span>
+          </div>
+        </div>
+        ${cards}
+      </div>
+    `;
+  }
+
+  $generateBtn.addEventListener('click', () => {
+    // В режиме «Полный рандом» выбираем пресет наобум
+    if (currentMode === 'random') {
+      const rnd = PRESETS[Math.floor(Math.random() * PRESETS.length)];
+      selectedPreset = { ...rnd };
+      syncPresetUI();
+    }
+    const workout = generateWorkout();
+    renderResult(workout);
+  });
+
+  /* ===== SETTINGS ===== */
+  function escapeHtml(str) {
+    const el = document.createElement('span');
+    el.textContent = str;
+    return el.innerHTML;
+  }
+
+  function renderSettings() {
+    $settingsList.innerHTML = algorithms.map(algo => {
+      const isEditing = editingId === algo.id;
+      const diffClass = DIFF_CLASS[algo.difficulty] || 'medium';
+
+      if (isEditing) {
+        const options = DIFFICULTIES.map(d =>
+          `<option value="${d}" ${d === algo.difficulty ? 'selected' : ''}>${d}</option>`
+        ).join('');
+
+        return `
+          <div class="settings-item settings-item--editing">
+            <img class="settings-item__thumb" src="images/algo_${algo.id}.png" alt="#${algo.id}">
+            <div class="settings-item__num">#${algo.id}</div>
+            <div class="settings-item__info">
+              <div class="settings-item__name">${escapeHtml(algo.name)}</div>
+            </div>
+            <div class="settings-item__edit-form">
+              <input type="text" id="edit-name-${algo.id}" value="${escapeHtml(algo.name)}" placeholder="Название алгоритма" maxlength="60">
+              <select id="edit-diff-${algo.id}">${options}</select>
+              <div class="edit-actions">
+                <button class="btn-cancel" data-cancel="${algo.id}">Отмена</button>
+                <button class="btn-save" data-save="${algo.id}">Сохранить</button>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      return `
+        <div class="settings-item">
+          <img class="settings-item__thumb" src="images/algo_${algo.id}.png" alt="#${algo.id}">
+          <div class="settings-item__num">#${algo.id}</div>
+          <div class="settings-item__info">
+            <div class="settings-item__name">${escapeHtml(algo.name)}</div>
+            <div class="settings-item__difficulty">
+              <span class="badge badge--${diffClass}">${algo.difficulty}</span>
+            </div>
+          </div>
+          <button class="settings-item__edit-btn" data-edit="${algo.id}" title="Редактировать">✏️</button>
+        </div>
+      `;
+    }).join('');
+  }
+
+  $settingsList.addEventListener('click', (e) => {
+    const editBtn = e.target.closest('[data-edit]');
+    const saveBtn = e.target.closest('[data-save]');
+    const cancelBtn = e.target.closest('[data-cancel]');
+
+    if (editBtn) {
+      editingId = parseInt(editBtn.dataset.edit);
+      renderSettings();
+      const input = document.getElementById(`edit-name-${editingId}`);
+      if (input) { input.focus(); input.select(); }
+    }
+
+    if (saveBtn) {
+      const id = parseInt(saveBtn.dataset.save);
+      const nameInput = document.getElementById(`edit-name-${id}`);
+      const diffSelect = document.getElementById(`edit-diff-${id}`);
+      const algo = algorithms.find(a => a.id === id);
+      if (algo && nameInput && diffSelect) {
+        algo.name = nameInput.value.trim() || `Алгоритм ${id}`;
+        algo.difficulty = diffSelect.value;
+        saveAlgorithms();
+      }
+      editingId = null;
+      renderSettings();
+    }
+
+    if (cancelBtn) {
+      editingId = null;
+      renderSettings();
+    }
+  });
+
+  // Enter key to save in edit mode
+  $settingsList.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && editingId) {
+      const saveBtn = document.querySelector(`[data-save="${editingId}"]`);
+      if (saveBtn) saveBtn.click();
+    }
+    if (e.key === 'Escape' && editingId) {
+      editingId = null;
+      renderSettings();
+    }
+  });
+
+  /* ===== MODAL ===== */
+  document.getElementById('open-settings').addEventListener('click', () => {
+    editingId = null;
+    renderSettings();
+    $overlay.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  });
+
+  function closeModal() {
+    $overlay.classList.remove('open');
+    document.body.style.overflow = '';
+    editingId = null;
+  }
+
+  document.getElementById('close-settings').addEventListener('click', closeModal);
+  $overlay.addEventListener('click', (e) => {
+    if (e.target === $overlay) closeModal();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && $overlay.classList.contains('open')) closeModal();
+  });
+
+  /* ===== INITIAL STATE ===== */
+  $resultArea.innerHTML = `
+    <div class="empty-state">
+      <div class="empty-state__icon">🎯</div>
+      <div class="empty-state__text">Выбери режим и жми «Сгенерировать»</div>
+    </div>
+  `;
+</script>
+
+</body>
+</html>
